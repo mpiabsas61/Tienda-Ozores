@@ -5,7 +5,7 @@ const productosDb = [
         precio: 179.999,
         stock: 5,
         img: "https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcTeHC20VN7reUOzJiEHRINl57sjdZEEf1yeaGAoRRqIvTvXYkfCoqcd8a1Lq7rztZI48EpVib6d-XX0nxB_ZJkgP5u4BbI4cJxe2MkwTx0Ad7UVU4yT8kyQN4b-hz0rEQKeTWv8WXuC&usqp=CAc",
-        descuento: true
+        descuento: false
     },
     {
         id_producto: 2,
@@ -29,7 +29,7 @@ const productosDb = [
         precio: 257.699,
         stock: 150,
         img: "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcTvLAwLAUWKmxIvOkhna6b9oxGfDlTeHTLDZ_pZf6QlFjcSf7ysOKjOt7NxxefKfzMecHXnJ8FqL9LIOT4WIEniqwO6bnToPe4IPjIA_MCgBHhvmsN0R7K5sUMH0PzJ1TNAeC6JhrU&usqp=CAc",
-        descuento: true
+        descuento: false
     },
     {
         id_producto: 5,

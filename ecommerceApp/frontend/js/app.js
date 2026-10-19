@@ -675,10 +675,13 @@ function renderCartItems() {
                 </div>
               </div>
               <div class="cart-item-controls d-flex flex-wrap gap-2 mt-3">
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-cart-action="decrement" data-product-id="${product.id}">
+                <button id="btn-decrement-${product.id}" type="button" class="btn btn-outline-secondary btn-sm" data-cart-action="decrement" data-product-id="${product.id}" aria-label="Disminuir cantidad de ${nombre}">
                   <i class="bi bi-dash"></i> 1
                 </button>
-                <button type="button" class="btn btn-outline-danger btn-sm" data-cart-action="remove-all" data-product-id="${product.id}">
+                <button id="btn-increment-${product.id}" type="button" class="btn btn-outline-secondary btn-sm" data-cart-action="increment" data-product-id="${product.id}" aria-label="Aumentar cantidad de ${nombre}" ${quantity >= Number(product.stock ?? 0) ? "disabled" : ""}>
+                  <i class="bi bi-plus"></i> 1
+                </button>
+                <button id="btn-remove-all-${product.id}" type="button" class="btn btn-outline-danger btn-sm" data-cart-action="remove-all" data-product-id="${product.id}">
                   <i class="bi bi-trash"></i> Quitar todo
                 </button>
               </div>
@@ -747,6 +750,19 @@ function addToCart(productId) {
   if (document.getElementById("cartModal")?.classList.contains("show")) {
     renderCartItems();
   }
+}
+
+function incrementCartItem(productId) {
+  const item = getCartItem(productId);
+  if (!item || item.quantity >= Number(item.product.stock ?? 0)) {
+    return;
+  }
+
+  item.quantity += 1;
+  persistCartState();
+  updateCartCount();
+  renderCatalogProducts(appState.currentProducts);
+  renderCartItems();
 }
 
 function decrementCartItem(productId) {
@@ -1048,6 +1064,10 @@ document.getElementById("cart-items-list").addEventListener("click", (event) => 
 
   const productId = button.dataset.productId;
   const action = button.dataset.cartAction;
+
+  if (action === "increment") {
+    incrementCartItem(productId);
+  }
 
   if (action === "decrement") {
     decrementCartItem(productId);
