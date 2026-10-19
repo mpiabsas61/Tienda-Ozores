@@ -74,10 +74,47 @@ async function ensureUsuarioColumns() {
     const queryInterface = sequelize.getQueryInterface();
     const table = await queryInterface.describeTable('Usuario');
 
+    if (!table.apellido) {
+        await queryInterface.addColumn('Usuario', 'apellido', {
+            type: DataTypes.STRING,
+            allowNull: true
+        });
+    }
+
     if (!table.role) {
         await queryInterface.addColumn('Usuario', 'role', {
             type: DataTypes.STRING,
             defaultValue: 'client'
+        });
+    }
+
+    if (!table.activo) {
+        await queryInterface.addColumn('Usuario', 'activo', {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
+        });
+    }
+
+    if (!table.passwordResetTokenHash) {
+        await queryInterface.addColumn('Usuario', 'passwordResetTokenHash', {
+            type: DataTypes.STRING,
+            allowNull: true
+        });
+    }
+
+    if (!table.passwordResetExpiresAt) {
+        await queryInterface.addColumn('Usuario', 'passwordResetExpiresAt', {
+            type: DataTypes.DATE,
+            allowNull: true
+        });
+    }
+
+    if (!table.passwordResetAttempts) {
+        await queryInterface.addColumn('Usuario', 'passwordResetAttempts', {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
         });
     }
 }

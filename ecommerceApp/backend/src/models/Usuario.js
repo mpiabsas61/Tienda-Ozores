@@ -14,6 +14,11 @@ const Usuario = sequelize.define('Usuario', {
         allowNull: false
     },
 
+    apellido: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
     email: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -36,6 +41,28 @@ const Usuario = sequelize.define('Usuario', {
     role: {
         type: DataTypes.STRING,
         defaultValue: 'client'
+    },
+
+    activo: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
+    },
+
+    passwordResetTokenHash: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
+    passwordResetExpiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+
+    passwordResetAttempts: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
     },
 
     orden_compra: {

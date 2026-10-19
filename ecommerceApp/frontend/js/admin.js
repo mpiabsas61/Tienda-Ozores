@@ -5,6 +5,7 @@ import {
   escapeHtml,
   fetchCategorias,
   fetchAdminProducts,
+  fetchAdminUsers,
   formatArsCurrency,
   formatDecimalInput,
   formatDiscountPercentage,
@@ -27,6 +28,8 @@ const state = {
   productPage: 1,
   productTotalPages: 1,
   productTotalItems: 0,
+  userPage: 1,
+  userTotalPages: 1,
   allProducts: [],
   productFilters: {
     id: "",
@@ -114,23 +117,22 @@ function normalizeCategoryRowData(row) {
 }
 
 function updateViewButtons() {
-  const productsButton = document.getElementById("products-view-button");
-  const categoriesButton = document.getElementById("categories-view-button");
+  for (const view of ["products", "categories", "users"]) {
+    const button = document.getElementById(`${view}-view-button`);
+    if (!button) {
+      continue;
+    }
 
-  if (!productsButton || !categoriesButton) {
-    return;
+    const isActive = state.activeView === view;
+    button.classList.toggle("btn-primary", isActive);
+    button.classList.toggle("btn-outline-primary", !isActive);
   }
-
-  const isProducts = state.activeView === "products";
-  productsButton.classList.toggle("btn-primary", isProducts);
-  productsButton.classList.toggle("btn-outline-primary", !isProducts);
-  categoriesButton.classList.toggle("btn-primary", !isProducts);
-  categoriesButton.classList.toggle("btn-outline-primary", isProducts);
 }
 
 function updateVisibleSections() {
   const productsSection = document.getElementById("admin-products-section");
   const categoriesSection = document.getElementById("admin-categories-section");
+  const usersSection = document.getElementById("admin-users-section");
 
   if (productsSection) {
     productsSection.classList.toggle("d-none", state.activeView !== "products");
@@ -139,12 +141,22 @@ function updateVisibleSections() {
   if (categoriesSection) {
     categoriesSection.classList.toggle("d-none", state.activeView !== "categories");
   }
+
+  if (usersSection) {
+    usersSection.classList.toggle("d-none", state.activeView !== "users");
+  }
 }
 
 function getDirtyRowsSelector() {
-  return state.activeView === "products"
-    ? '#admin-products-body tr[data-product-id][data-dirty="true"]'
-    : '#admin-categories-body tr[data-category-id][data-dirty="true"]';
+  if (state.activeView === "products") {
+    return '#admin-products-body tr[data-product-id][data-dirty="true"]';
+  }
+
+  if (state.activeView === "categories") {
+    return '#admin-categories-body tr[data-category-id][data-dirty="true"]';
+  }
+
+  return "#admin-users-body tr[data-dirty='true']";
 }
 
 function updateSaveButtonState() {
@@ -157,9 +169,10 @@ function updateSaveButtonState() {
   const labels = {
     products: "Guardar cambios",
     categories: "Guardar categorías",
+    users: "Guardar cambios",
   };
 
-  button.disabled = state.saving || dirtyRows === 0;
+  button.disabled = state.activeView === "users" || state.saving || dirtyRows === 0;
   button.innerHTML = `<i class="bi bi-save"></i> ${labels[state.activeView]}${dirtyRows > 0 ? ` (${dirtyRows})` : ""}`;
 }
 
@@ -719,6 +732,124 @@ function renderPagination() {
   pagination.innerHTML = pageItems.join("");
 }
 
+function renderUsersPagination() {
+  const pagination = document.getElementById("admin-users-pagination");
+  if (!pagination) {
+    return;
+  }
+
+  if (state.userTotalPages <= 1) {
+    pagination.innerHTML = "";
+    return;
+  }
+
+  const makePageItem = ({ label, page, active = false, disabled = false }) => `
+    <li class="page-item ${active ? "active" : ""} ${disabled ? "disabled" : ""}">
+      <button type="button" class="page-link" data-user-page="${page}" ${disabled ? "disabled" : ""} ${active ? 'aria-current="page"' : ""}>
+        ${label}
+      </button>
+    </li>
+  `;
+
+  const pageItems = [
+    makePageItem({
+      label: "Anterior",
+      page: state.userPage - 1,
+      disabled: state.userPage === 1,
+    }),
+  ];
+
+  for (let page = 1; page <= state.userTotalPages; page += 1) {
+    pageItems.push(
+      makePageItem({
+        label: page,
+        page,
+        active: page === state.userPage,
+      }),
+    );
+  }
+
+  pageItems.push(
+    makePageItem({
+      label: "Siguiente",
+      page: state.userPage + 1,
+      disabled: state.userPage === state.userTotalPages,
+    }),
+  );
+
+  pagination.innerHTML = pageItems.join("");
+}
+
+async function loadUsers(page = state.userPage) {
+  const body = document.getElementById("admin-users-body");
+  body.innerHTML = `
+    <tr>
+      <td colspan="7" class="text-center py-4 text-muted">Cargando usuarios...</td>
+    </tr>
+  `;
+  setMessage("Cargando usuarios...");
+
+  try {
+    const data = await fetchAdminUsers({ page, limit: ADMIN_PAGE_SIZE });
+    const users = Array.isArray(data.usuarios) ? data.usuarios : [];
+    const pagination = data.pagination ?? {};
+
+    state.userPage = Number(pagination.page) || page;
+    state.userTotalPages = Math.max(1, Number(pagination.totalPages) || 1);
+
+    if (!users.length) {
+      body.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-4 text-muted">No hay usuarios registrados.</td>
+        </tr>
+      `;
+    } else {
+      body.innerHTML = users
+        .map((user) => {
+          const userId = escapeHtml(String(user.id ?? ""));
+          const nombre = escapeHtml(String(user.nombre ?? "").trim() || "-");
+          const apellido = escapeHtml(String(user.apellido ?? "").trim() || "-");
+          const email = escapeHtml(String(user.email ?? ""));
+          const role = escapeHtml(getFriendlyRoleLabel(user) || "-");
+          const isActive = user.activo !== false;
+          const statusLabel = isActive ? "Activa" : "Inactiva";
+          const statusClass = isActive ? "text-success" : "text-danger";
+          const registrationDate = user.createdAt ? new Date(user.createdAt) : null;
+          const formattedDate =
+            registrationDate && Number.isFinite(registrationDate.getTime())
+              ? registrationDate.toLocaleDateString("es-AR")
+              : "-";
+
+          return `
+            <tr>
+              <td class="text-center text-muted">${userId}</td>
+              <td>${nombre}</td>
+              <td>${apellido}</td>
+              <td>${email}</td>
+              <td class="text-center text-capitalize">${role}</td>
+              <td class="text-center ${statusClass}">${statusLabel}</td>
+              <td class="text-center">${escapeHtml(formattedDate)}</td>
+            </tr>
+          `;
+        })
+        .join("");
+    }
+
+    renderUsersPagination();
+    setMessage(`Mostrando ${users.length} de ${Number(pagination.total) || 0} usuarios.`);
+  } catch (error) {
+    console.error("Error al cargar usuarios:", error);
+    state.userTotalPages = 1;
+    body.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-4 text-danger">No se pudieron cargar los usuarios.</td>
+      </tr>
+    `;
+    renderUsersPagination();
+    setMessage(error.message, "danger");
+  }
+}
+
 function ensureDeleteModal() {
   if (!deleteModalInstance) {
     const modalElement = document.getElementById("deleteConfirmModal");
@@ -844,7 +975,11 @@ async function loadActiveView() {
     return loadProducts(state.productPage);
   }
 
-  return loadCategories();
+  if (state.activeView === "categories") {
+    return loadCategories();
+  }
+
+  return loadUsers(state.userPage);
 }
 
 function getChangedProductFields(row) {
@@ -1082,6 +1217,10 @@ async function saveCategoryRow(row) {
 }
 
 async function saveAllChanges() {
+  if (state.activeView === "users") {
+    return;
+  }
+
   const rows = Array.from(document.querySelectorAll(getDirtyRowsSelector()));
 
   if (!rows.length) {
@@ -1319,6 +1458,10 @@ document.getElementById("categories-view-button").addEventListener("click", asyn
   await switchView("categories");
 });
 
+document.getElementById("users-view-button").addEventListener("click", async () => {
+  await switchView("users");
+});
+
 document.getElementById("create-category-button").addEventListener("click", handleCreateCategory);
 
 document.getElementById("export-products-button").addEventListener("click", exportProductsToXlsx);
@@ -1374,6 +1517,20 @@ document.getElementById("admin-pagination").addEventListener("click", async (eve
   }
 
   await loadProducts(page);
+});
+
+document.getElementById("admin-users-pagination").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-user-page]");
+  if (!button || button.disabled || state.activeView !== "users") {
+    return;
+  }
+
+  const page = Number(button.dataset.userPage);
+  if (!Number.isInteger(page) || page < 1 || page === state.userPage) {
+    return;
+  }
+
+  await loadUsers(page);
 });
 
 document.getElementById("admin-products-body").addEventListener("click", async (event) => {

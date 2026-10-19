@@ -178,6 +178,26 @@ export async function registerUser(payload) {
   return data;
 }
 
+export async function requestPasswordReset(email) {
+  return apiRequest("/api/password-recovery/request", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword({ email, code, password }) {
+  return apiRequest("/api/password-recovery/reset", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, code, password }),
+  });
+}
+
 export function logoutSession() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
@@ -254,6 +274,16 @@ export async function fetchPublicProducts({ categoryId = "", page = 1, limit = 1
 
 export async function fetchAdminProducts({ page = 1, limit = 10 } = {}) {
   const endpoint = new URL("/api/admin/productos", window.location.origin);
+  endpoint.searchParams.set("page", page);
+  endpoint.searchParams.set("limit", limit);
+
+  return apiRequest(endpoint, {
+    headers: getAuthHeaders(),
+  });
+}
+
+export async function fetchAdminUsers({ page = 1, limit = 10 } = {}) {
+  const endpoint = new URL("/api/admin/usuarios", window.location.origin);
   endpoint.searchParams.set("page", page);
   endpoint.searchParams.set("limit", limit);
 

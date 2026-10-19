@@ -31,6 +31,14 @@
             <div id="register-context-message" class="alert alert-info small d-none" role="status"></div>
             <form id="register-form">
               <div class="mb-3">
+                <label for="register-nombre" class="form-label">Nombre (opcional)</label>
+                <input type="text" class="form-control" id="register-nombre" autocomplete="given-name" />
+              </div>
+              <div class="mb-3">
+                <label for="register-apellido" class="form-label">Apellido (opcional)</label>
+                <input type="text" class="form-control" id="register-apellido" autocomplete="family-name" />
+              </div>
+              <div class="mb-3">
                 <label for="register-email" class="form-label">Email</label>
                 <input type="email" class="form-control" id="register-email" autocomplete="email" required />
               </div>

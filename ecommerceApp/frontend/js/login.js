@@ -17,6 +17,12 @@ if (nextAction === "checkout") {
   contextMessage.classList.remove("d-none");
 }
 
+if (new URLSearchParams(window.location.search).get("passwordReset") === "1") {
+  const contextMessage = document.getElementById("login-context-message");
+  contextMessage.textContent = "Tu contraseña se actualizó correctamente. Ya podés iniciar sesión.";
+  contextMessage.classList.remove("d-none");
+}
+
 document.getElementById("login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
 

@@ -20,6 +20,8 @@ if (nextAction === "checkout") {
 document.getElementById("register-form").addEventListener("submit", async (event) => {
   event.preventDefault();
 
+  const nombre = document.getElementById("register-nombre").value.trim();
+  const apellido = document.getElementById("register-apellido").value.trim();
   const email = document.getElementById("register-email").value.trim();
   const password = document.getElementById("register-password").value;
   const passwordConfirm = document.getElementById("register-password-confirm").value;
@@ -33,7 +35,7 @@ document.getElementById("register-form").addEventListener("submit", async (event
   }
 
   try {
-    await registerUser({ email, password });
+    await registerUser({ nombre, apellido, email, password });
     const target = nextAction === "checkout" ? "login.html?next=checkout&registered=1" : "login.html?registered=1";
     window.location.replace(target);
   } catch (error) {
