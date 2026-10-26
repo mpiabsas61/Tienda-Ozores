@@ -106,6 +106,7 @@ const userController = {
         await usuario.save();
 
         console.info(`[recuperacion-clave] Código de un solo uso para ${email}: ${code}`);
+        console.log(`[recuperacion-clave] Código de un solo uso para ${email}: ${code}`);
       }
 
       return res.status(202).json(PASSWORD_RESET_RESPONSE);
