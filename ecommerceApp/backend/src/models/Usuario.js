@@ -19,6 +19,16 @@ const Usuario = sequelize.define('Usuario', {
         allowNull: true
     },
 
+    telefono: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
+    fecha_nacimiento: {
+        type: DataTypes.DATEONLY,
+        allowNull: true
+    },
+
     email: {
         type: DataTypes.STRING,
         allowNull: false,

@@ -1,15 +1,60 @@
-import { fetchMyOrders, formatArsCurrency, getFriendlyRoleLabel, getStoredUser, logoutSession } from "./shared.js";
+import {
+  fetchMyOrders,
+  fetchMyProfile,
+  formatArsCurrency,
+  getFriendlyRoleLabel,
+  getStoredUser,
+  logoutSession,
+  updateMyProfile,
+} from "./shared.js";
 
 const user = getStoredUser();
+let profile = user ? { ...user } : null;
 
 if (!user) {
   window.location.replace("login.html");
 }
 
-function setProfileInfo() {
-  document.getElementById("profile-name").textContent = user.nombre ?? "Usuario";
-  document.getElementById("profile-email").textContent = user.email ?? "";
+function renderProfile(profileInfo) {
+  const fullName = [profileInfo.nombre, profileInfo.apellido].filter(Boolean).join(" ");
+  document.getElementById("profile-name").textContent = fullName || "Usuario";
+  document.getElementById("profile-email").textContent = profileInfo.email ?? "";
+  document.getElementById("profile-phone").textContent = profileInfo.telefono || "No informado";
+  document.getElementById("profile-birthdate").textContent = profileInfo.fecha_nacimiento || "No informada";
   document.getElementById("profile-role").textContent = getFriendlyRoleLabel(user) || "cliente";
+}
+
+function setProfileMessage(message, type = "danger") {
+  const profileMessage = document.getElementById("profile-message");
+  profileMessage.textContent = message;
+  profileMessage.className = `alert alert-${type} mt-3 mb-0`;
+  profileMessage.setAttribute("role", type === "danger" ? "alert" : "status");
+}
+
+function clearProfileMessage() {
+  const profileMessage = document.getElementById("profile-message");
+  profileMessage.textContent = "";
+  profileMessage.className = "alert d-none mt-3 mb-0";
+}
+
+function fillProfileForm(profileInfo) {
+  document.getElementById("profile-edit-name").value = profileInfo.nombre ?? "";
+  document.getElementById("profile-edit-lastname").value = profileInfo.apellido ?? "";
+  document.getElementById("profile-edit-email").value = profileInfo.email ?? "";
+  document.getElementById("profile-edit-phone").value = profileInfo.telefono ?? "";
+  document.getElementById("profile-edit-birthdate").value = profileInfo.fecha_nacimiento ?? "";
+}
+
+async function loadProfile() {
+  const latestProfile = await fetchMyProfile();
+  profile = latestProfile;
+  Object.assign(user, latestProfile);
+  localStorage.setItem("user", JSON.stringify(user));
+  renderProfile(profile);
+
+  const editButton = document.getElementById("profile-edit-button");
+  editButton.disabled = user.role !== "client";
+  editButton.classList.toggle("d-none", user.role !== "client");
 }
 
 function renderOrders(orders = []) {
@@ -88,7 +133,61 @@ document.getElementById("logout-button").addEventListener("click", () => {
   window.location.replace("login.html");
 });
 
-setProfileInfo();
+const editButton = document.getElementById("profile-edit-button");
+const editForm = document.getElementById("profile-edit-form");
+
+editButton.addEventListener("click", () => {
+  clearProfileMessage();
+  fillProfileForm(profile);
+  editForm.classList.remove("d-none");
+  editButton.setAttribute("aria-expanded", "true");
+  document.getElementById("profile-edit-name").focus();
+});
+
+document.getElementById("profile-cancel-button").addEventListener("click", () => {
+  editForm.classList.add("d-none");
+  editButton.setAttribute("aria-expanded", "false");
+  clearProfileMessage();
+});
+
+editForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearProfileMessage();
+
+  const saveButton = document.getElementById("profile-save-button");
+  saveButton.disabled = true;
+  saveButton.textContent = "Guardando...";
+
+  try {
+    const updatedProfile = await updateMyProfile({
+      nombre: document.getElementById("profile-edit-name").value.trim(),
+      apellido: document.getElementById("profile-edit-lastname").value.trim(),
+      telefono: document.getElementById("profile-edit-phone").value.trim(),
+      fecha_nacimiento: document.getElementById("profile-edit-birthdate").value,
+    });
+    profile = updatedProfile;
+    Object.assign(user, updatedProfile);
+    localStorage.setItem("user", JSON.stringify(user));
+    renderProfile(profile);
+    fillProfileForm(profile);
+    editForm.classList.add("d-none");
+    editButton.setAttribute("aria-expanded", "false");
+    setProfileMessage("Tus datos se actualizaron correctamente.", "success");
+  } catch (error) {
+    setProfileMessage(error.message);
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent = "Guardar cambios";
+  }
+});
+
+renderProfile(profile);
+loadProfile().catch((error) => {
+  const editButton = document.getElementById("profile-edit-button");
+  editButton.disabled = true;
+  setProfileMessage(error.message);
+});
+
 loadOrders().catch((error) => {
   const list = document.getElementById("orders-list");
   list.innerHTML = `<div class="alert alert-danger mb-0">${error.message}</div>`;

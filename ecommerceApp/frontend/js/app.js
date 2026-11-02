@@ -30,6 +30,7 @@ const appState = {
   currentPage: 1,
   totalPages: 1,
   totalProducts: 0,
+  sortBy: "",
   cartItems: [],
   cartPage: 1,
   cartTotalPages: 1,
@@ -872,6 +873,7 @@ async function cargarCatalogo() {
       categoryId: appState.activeCategoryId,
       page: appState.currentPage,
       limit: CATALOG_PAGE_SIZE,
+      sortBy: appState.sortBy,
     });
 
     appState.totalPages = Number(pagination?.totalPages) || 1;
@@ -960,6 +962,11 @@ function handleLogout() {
 
 document.getElementById("logout-button").addEventListener("click", handleLogout);
 document.getElementById("filter-button").addEventListener("click", openFilterModal);
+document.getElementById("catalog-sort").addEventListener("change", async (event) => {
+  appState.sortBy = event.target.value;
+  appState.currentPage = 1;
+  await cargarCatalogo();
+});
 document.getElementById("clear-filter-inline-button").addEventListener("click", async () => {
   await applyFilterSelection("");
 });

@@ -81,6 +81,20 @@ async function ensureUsuarioColumns() {
         });
     }
 
+    if (!table.telefono) {
+        await queryInterface.addColumn('Usuario', 'telefono', {
+            type: DataTypes.STRING,
+            allowNull: true
+        });
+    }
+
+    if (!table.fecha_nacimiento) {
+        await queryInterface.addColumn('Usuario', 'fecha_nacimiento', {
+            type: DataTypes.DATEONLY,
+            allowNull: true
+        });
+    }
+
     if (!table.role) {
         await queryInterface.addColumn('Usuario', 'role', {
             type: DataTypes.STRING,

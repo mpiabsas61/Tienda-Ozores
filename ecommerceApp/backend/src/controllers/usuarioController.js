@@ -8,9 +8,66 @@ const PASSWORD_RESET_MAX_ATTEMPTS = 5;
 const PASSWORD_RESET_RESPONSE = {
   mensaje: "Si existe una cuenta con ese email, se generó un código de recuperación.",
 };
+const PROFILE_ATTRIBUTES = ["id", "nombre", "apellido", "email", "role", "telefono", "fecha_nacimiento"];
+const PROFILE_FIELDS = ["nombre", "apellido", "telefono", "fecha_nacimiento"];
 
 function hashResetCode(code) {
   return createHash("sha256").update(code).digest("hex");
+}
+
+function validateProfileUpdate(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { error: "Ingresá datos válidos para actualizar el perfil." };
+  }
+
+  const fields = Object.keys(body);
+  if (!fields.length || fields.some((field) => !PROFILE_FIELDS.includes(field))) {
+    return { error: "Solo se pueden modificar nombre, apellido, teléfono y fecha de nacimiento." };
+  }
+
+  const updates = {};
+  for (const field of fields) {
+    if (typeof body[field] !== "string") {
+      return { error: `El campo ${field} no es válido.` };
+    }
+    updates[field] = body[field].trim();
+  }
+
+  if ("nombre" in updates && (!updates.nombre || updates.nombre.length > 100)) {
+    return { error: "El nombre es obligatorio y no puede superar los 100 caracteres." };
+  }
+
+  if ("apellido" in updates) {
+    if (updates.apellido.length > 100) {
+      return { error: "El apellido no puede superar los 100 caracteres." };
+    }
+    updates.apellido = updates.apellido || null;
+  }
+
+  if ("telefono" in updates) {
+    if (updates.telefono.length > 30) {
+      return { error: "El teléfono no puede superar los 30 caracteres." };
+    }
+    updates.telefono = updates.telefono || null;
+  }
+
+  if ("fecha_nacimiento" in updates) {
+    const birthDate = updates.fecha_nacimiento;
+    if (birthDate) {
+      const parsedDate = new Date(`${birthDate}T00:00:00.000Z`);
+      const isValidDate =
+        /^\d{4}-\d{2}-\d{2}$/.test(birthDate) &&
+        !Number.isNaN(parsedDate.getTime()) &&
+        parsedDate.toISOString().slice(0, 10) === birthDate;
+      if (!isValidDate || birthDate > new Date().toISOString().slice(0, 10)) {
+        return { error: "Ingresá una fecha de nacimiento válida y no futura." };
+      }
+    } else {
+      updates.fecha_nacimiento = null;
+    }
+  }
+
+  return { updates };
 }
 
 function resetCodeMatches(code, expectedHash) {
@@ -81,6 +138,49 @@ const userController = {
     } catch (error) {
       console.error("Error al listar usuarios:", error);
       res.status(500).json({ error: "No se pudieron cargar los usuarios" });
+    }
+  },
+
+  getMyProfile: async (req, res) => {
+    try {
+      const usuario = await Usuario.findByPk(req.user.id, {
+        attributes: PROFILE_ATTRIBUTES,
+      });
+      if (!usuario) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+
+      return res.json(usuario);
+    } catch (error) {
+      console.error("Error al cargar el perfil del usuario:", error);
+      return res.status(500).json({ error: "No se pudo cargar el perfil." });
+    }
+  },
+
+  updateMyProfile: async (req, res) => {
+    const validation = validateProfileUpdate(req.body);
+    if (validation.error) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    try {
+      const usuario = await Usuario.findByPk(req.user.id);
+      if (!usuario) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+
+      await usuario.update(validation.updates);
+      const profile = await Usuario.findByPk(usuario.id, {
+        attributes: PROFILE_ATTRIBUTES,
+      });
+
+      return res.json({
+        mensaje: "Los datos se actualizaron correctamente.",
+        usuario: profile,
+      });
+    } catch (error) {
+      console.error("Error al actualizar el perfil del usuario:", error);
+      return res.status(500).json({ error: "No se pudieron actualizar los datos." });
     }
   },
 

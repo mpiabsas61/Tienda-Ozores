@@ -238,11 +238,15 @@ export async function deleteCategoria(categoryId) {
   });
 }
 
-export async function fetchPublicProducts({ categoryId = "", page = 1, limit = 10 } = {}) {
+export async function fetchPublicProducts({ categoryId = "", page = 1, limit = 10, sortBy = "" } = {}) {
   const endpoint = new URL("/api/productos", window.location.origin);
 
   if (categoryId) {
     endpoint.searchParams.set("id_categoria", categoryId);
+  }
+
+  if (sortBy) {
+    endpoint.searchParams.set("sort", sortBy);
   }
 
   endpoint.searchParams.set("page", page);
@@ -316,6 +320,24 @@ export async function fetchMyOrders() {
   return apiRequest("/api/ordenes/mis-compras", {
     headers: getAuthHeaders(),
   });
+}
+
+export async function fetchMyProfile() {
+  return apiRequest("/api/usuarios/me", {
+    headers: getAuthHeaders(),
+  });
+}
+
+export async function updateMyProfile(payload) {
+  const data = await apiRequest("/api/usuarios/me", {
+    method: "PUT",
+    headers: getAuthHeaders({
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(payload),
+  });
+
+  return data.usuario;
 }
 
 export async function updateProduct(productId, payload) {

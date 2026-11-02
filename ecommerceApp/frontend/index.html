@@ -51,30 +51,33 @@
   <div class="container mt-4 mt-md-5 mb-5" id="app">
     <section id="catalog-section">
 
-      <div class="row mb-3">
-        <div class="col-4">
-
+      <div class="row mb-3 align-items-end g-3">
+        <div class="col-12 col-md-4">
           <div class="catalog-header">
             <h2>Catálogo de Productos</h2>
           </div>
         </div>
 
-        <div class="col-8">
-
-          <div class=" g-3 mb-4 align-items-end">
-            <div class="d-flex gap-2 justify-content-end">
-              <button id="clear-filter-inline-button" class="btn btn-outline-secondary d-none">
-                <i class="bi bi-x-circle"></i> Limpiar filtro
-              </button>
-              <button id="filter-button" class="btn btn-outline-primary">
-                <i class="bi bi-funnel"></i> Filtrar
-              </button>
-              <!-- respuesta Filtros -->
-              <div id="active-category-banner" class="alert alert-info py-2 small d-none" role="status"></div>
+        <div class="col-12 col-md-8">
+          <div class="d-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-md-end align-items-sm-end">
+            <div>
+              <label for="catalog-sort" class="form-label small mb-1">Ordenar por</label>
+              <select id="catalog-sort" class="form-select">
+                <!-- <option value="">Orden original</option> -->
+                <option value="price_desc">Mayor a menor (precio)</option>
+                <option value="price_asc">Menor a mayor (precio)</option>
+                <option value="stock_asc">Últimas unidades (menor stock)</option>
+              </select>
             </div>
+            <button id="clear-filter-inline-button" class="btn btn-outline-secondary d-none">
+              <i class="bi bi-x-circle"></i> Limpiar filtro
+            </button>
+            <button id="filter-button" class="btn btn-outline-primary">
+              <i class="bi bi-funnel"></i> Filtrar
+            </button>
+            <div id="active-category-banner" class="alert alert-info py-2 small mb-0 d-none" role="status"></div>
           </div>
         </div>
-      
       </div>
 
 

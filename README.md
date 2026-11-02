@@ -115,7 +115,8 @@ La aplicación usa JWT para autenticación stateless:
 - Acceso a catálogo y búsqueda
 - Carrito personal
 - Realizar compras
-- Ver su perfil y órdenes
+- Ver y actualizar nombre, apellido, teléfono y fecha de nacimiento en su perfil
+- Ver sus órdenes
 
 **Rol: Admin**
 - Todos los permisos de cliente
@@ -185,7 +186,11 @@ Content-Type: application/json
 | PUT | `/api/categorias/:id` | Actualiza una categoría. | `:id` + campos a modificar | `200` con la categoría modificada |
 | DELETE | `/api/categorias/:id` | Elimina una categoría. | `:id` | `200` con confirmación |
 | GET | `/api/ordenes/mis-compras` | Devuelve el historial de compras del usuario autenticado. | Requiere usuario autenticado | `200` con la lista de órdenes |
+| GET | `/api/usuarios/me` | Devuelve los datos personales del usuario autenticado. | Requiere usuario autenticado | `200` con nombre, apellido, email, teléfono y fecha de nacimiento |
+| PUT | `/api/usuarios/me` | Actualiza los datos personales del usuario autenticado. | `nombre`, `apellido`, `telefono` y/o `fecha_nacimiento`; requiere usuario autenticado | `200` con el perfil actualizado |
 | POST | `/api/checkout` | Finaliza una compra a partir del carrito. | `{ "items": [{ "productId": 1, "quantity": 2 }], "couponCode": "CUPON10" }` | `200` con resumen de la compra |
+
+El catálogo admite el parámetro opcional `sort` en `/api/productos`: `price_desc` ordena por precio descendente, `price_asc` por precio ascendente y `stock_asc` por stock ascendente (últimas unidades primero).
 
 ## 🧪 Credenciales de Prueba
 

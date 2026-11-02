@@ -11,7 +11,11 @@ router.post('/password-recovery/reset', userController.resetPassword);
 
 router.get('/admin/usuarios', authenticateToken, isAdmin, userController.getAdminAll);
 
-router.put('/usuarios/:id', userController.update);
+router.get('/usuarios/me', authenticateToken, userController.getMyProfile);
+
+router.put('/usuarios/me', authenticateToken, userController.updateMyProfile);
+
+router.put('/usuarios/:id', authenticateToken, isAdmin, userController.update);
 
 router.get('/usuarios/:id', userController.getById);
 

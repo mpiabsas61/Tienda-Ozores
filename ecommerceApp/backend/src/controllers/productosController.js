@@ -16,6 +16,12 @@ function buildPagination(page, limit, total) {
   };
 }
 
+const PRODUCT_SORT_ORDERS = {
+  price_desc: [["precio", "DESC"], ["id", "ASC"]],
+  price_asc: [["precio", "ASC"], ["id", "ASC"]],
+  stock_asc: [["stock", "ASC"], ["id", "ASC"]],
+};
+
 function isAdminRequest(req) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -88,7 +94,7 @@ async function resolveCategoryId(body = {}, existing = null) {
   return categoriaId;
 }
 
-async function findProducts({ where, page, limit, publicOnly = false }) {
+async function findProducts({ where, page, limit, publicOnly = false, sortBy = "" }) {
   const categoryInclude = {
     model: Categoria,
     as: "categoria",
@@ -102,7 +108,7 @@ async function findProducts({ where, page, limit, publicOnly = false }) {
   const queryOptions = {
     where,
     include: [categoryInclude],
-    order: [["id", "ASC"]],
+    order: PRODUCT_SORT_ORDERS[sortBy] ?? [["id", "ASC"]],
   };
 
   if (page && limit) {
@@ -127,6 +133,11 @@ const productsController = {
       const categoriaId = Number(req.query.id_categoria);
       const page = parsePositiveInteger(req.query.page);
       const limit = parsePositiveInteger(req.query.limit);
+      const sortBy = String(req.query.sort ?? "");
+
+      if (sortBy && !Object.hasOwn(PRODUCT_SORT_ORDERS, sortBy)) {
+        return res.status(400).json({ error: "El criterio de ordenamiento no es válido." });
+      }
 
       if (Number.isInteger(categoriaId) && categoriaId > 0) {
         where.id_categoria = categoriaId;
@@ -134,7 +145,7 @@ const productsController = {
 
       where.visible = true;
 
-      const resultado = await findProducts({ where, page, limit, publicOnly: true });
+      const resultado = await findProducts({ where, page, limit, publicOnly: true, sortBy });
       res.json(resultado);
     } catch (error) {
       res.status(500).json({ error: "Error al obtener los productos" });
